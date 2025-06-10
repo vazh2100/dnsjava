@@ -5,6 +5,8 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.NetworkInfo;
+import android.os.Build;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import lombok.extern.slf4j.Slf4j;
@@ -36,24 +38,40 @@ public class AndroidResolverConfigProvider extends BaseResolverConfigProvider {
       throw new InitializationException("Context must be initialized by calling setContext");
     }
 
-    ConnectivityManager cm = context.getSystemService(ConnectivityManager.class);
-    Network network = cm.getActiveNetwork();
-    if (network == null) {
-      // if the device is offline, there's no active network
-      return;
-    }
+    if (Build.VERSION.SDK_INT <= 22) {
+      ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+      for (Network network : cm.getAllNetworks()) {
+        NetworkInfo networkInfo = cm.getNetworkInfo(network);
+        if (networkInfo != null && networkInfo.isConnected()) {
+          LinkProperties lp = cm.getLinkProperties(network);
+          if (lp != null) {
+            for (InetAddress address : lp.getDnsServers()) {
+              addNameserver(new InetSocketAddress(address, SimpleResolver.DEFAULT_PORT));
+              parseSearchPathList(lp.getDomains(), ","); // ??
+            }
+          }
+        }
+      }
+    } else {
+      ConnectivityManager cm = context.getSystemService(ConnectivityManager.class);
+      Network network = cm.getActiveNetwork();
+      if (network == null) {
+        // if the device is offline, there's no active network
+        return;
+      }
 
-    LinkProperties lp = cm.getLinkProperties(network);
-    if (lp == null) {
-      // can be null for an unknown network, which may happen if networks change
-      return;
-    }
+      LinkProperties lp = cm.getLinkProperties(network);
+      if (lp == null) {
+        // can be null for an unknown network, which may happen if networks change
+        return;
+      }
 
-    for (InetAddress address : lp.getDnsServers()) {
-      addNameserver(new InetSocketAddress(address, SimpleResolver.DEFAULT_PORT));
-    }
+      for (InetAddress address : lp.getDnsServers()) {
+        addNameserver(new InetSocketAddress(address, SimpleResolver.DEFAULT_PORT));
+      }
 
-    parseSearchPathList(lp.getDomains(), ",");
+      parseSearchPathList(lp.getDomains(), ",");
+    }
   }
 
   @Override

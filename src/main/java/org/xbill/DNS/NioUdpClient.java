@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 package org.xbill.DNS;
 
+import android.os.Build;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -193,7 +194,11 @@ final class NioUdpClient extends NioClient implements UdpIoClient {
               addr = new InetSocketAddress(local.getAddress(), port);
             }
 
-            channel.bind(addr);
+            if (Build.VERSION.SDK_INT <= 23) {
+              channel.socket().bind(addr);
+            } else {
+              channel.bind(addr);
+            }
             bound = true;
             break;
           } catch (SocketException e) {
