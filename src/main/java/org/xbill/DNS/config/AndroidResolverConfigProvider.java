@@ -39,7 +39,8 @@ public class AndroidResolverConfigProvider extends BaseResolverConfigProvider {
     }
 
     if (Build.VERSION.SDK_INT <= 22) {
-      ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+      ConnectivityManager cm =
+          (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
       for (Network network : cm.getAllNetworks()) {
         NetworkInfo networkInfo = cm.getNetworkInfo(network);
         if (networkInfo != null && networkInfo.isConnected()) {
