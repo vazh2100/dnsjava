@@ -9,4 +9,12 @@ public class ConnectivityManager {
   public LinkProperties getLinkProperties(Network network) {
     throw new UnsupportedOperationException();
   }
+
+  public Network[] getAllNetworks() {
+    throw new UnsupportedOperationException();
+  }
+
+  public NetworkInfo getNetworkInfo(Network network) {
+    throw new UnsupportedOperationException();
+  }
 }
